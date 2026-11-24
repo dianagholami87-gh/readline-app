@@ -11,7 +11,12 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
-const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/readline';
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('MONGODB_URI is required. Set it in your environment or .env file.');
+  process.exit(1);
+}
 
 // ---------- Auth config ----------
 let JWT_SECRET = process.env.JWT_SECRET;
@@ -82,22 +87,10 @@ const Item = mongoose.model('Item', itemSchema);
 
 // Sample items every new account starts with (delete the insertMany call in /register to start empty).
 const seedItems = [
-  { title: 'The Case for Slow Software', src: 'https://example.com/slow-software', type: 'Article', status: 'Reading', added: 'Nov 18',
-    notes: 'Argues that teams ship better work when release cadence follows the problem, not the calendar. The section on “maintenance as design” is worth rereading before the Q1 planning doc.' },
+  { title: 'Welcome to Readline — Directed by Diana GH & AI', src: 'Diana GH & Team of AIs', type: 'Article', status: 'Reading', added: 'Nov 25',
+    notes: 'Directed, managed, and deployed by Diana GH in collaboration with a team of AIs. Add your own articles, papers, books, and notes here to organize your reading queue.' },
   { title: 'Attention Is All You Need', src: 'arxiv.org/abs/1706.03762', type: 'Paper', status: 'Done', added: 'Nov 11',
-    notes: 'Reread for the positional encoding details. Still the clearest explanation of why self-attention scales the way it does. Figure 2 is the one to show colleagues.' },
-  { title: 'A Pattern Language', src: 'Christopher Alexander, 1977', type: 'Book', status: 'Reading', added: 'Nov 3',
-    notes: 'Reading three patterns a night. Pattern 159, Light on Two Sides of Every Room, changed how I look at my own desk.' },
-  { title: 'How Bridges Actually Fail', src: 'https://example.com/bridge-failures', type: 'Video', status: 'Unread', added: 'Nov 20',
-    notes: 'Recommended by Maya. About 40 minutes. Look for the Tacoma Narrows section and the segment on fatigue cracking.' },
-  { title: 'Sleep, Memory, and the Hippocampus', src: 'nature.com/articles/neuro-sleep', type: 'Paper', status: 'Unread', added: 'Nov 19',
-    notes: 'Background for the study-habits piece. Check the sample size in the methods before citing anything.' },
-  { title: 'Notes on Writing Plainly', src: 'https://example.com/plain-writing', type: 'Article', status: 'Done', added: 'Oct 29',
-    notes: 'Short and useful. Takeaway: cut every sentence that exists to introduce the next one.' },
-  { title: 'The Overstory', src: 'Richard Powers, 2018', type: 'Book', status: 'Unread', added: 'Oct 22',
-    notes: 'Lent by Daniel. Start after finishing A Pattern Language.' },
-  { title: 'Why Typefaces Feel the Way They Do', src: 'https://example.com/type-feel', type: 'Video', status: 'Done', added: 'Oct 15',
-    notes: 'Good grounding for the type scale discussion. Skip the first five minutes.' }
+    notes: 'Reread for the positional encoding details. Still the clearest explanation of why self-attention scales the way it does. Figure 2 is the one to show colleagues.' }
 ];
 
 function seedFor(userId) {
@@ -308,14 +301,14 @@ app.delete('/api/items/:id', async (req, res) => {
 });
 
 mongoose
-  .connect(MONGO_URI)
+  .connect(MONGODB_URI)
   .then(() => {
-    console.log('Connected to MongoDB:', MONGO_URI);
+    console.log('Connected to MongoDB');
     app.listen(PORT, () => {
       console.log(`Readline running at http://localhost:${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('MongoDB connection error:', err);
+    console.error('MongoDB connection failed:', err.message || 'Unknown connection error');
     process.exit(1);
   });
